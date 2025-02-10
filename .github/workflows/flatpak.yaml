@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
+      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@test
         with:
           bundle: example.flatpak
           manifest-path: org.example.Example.json
