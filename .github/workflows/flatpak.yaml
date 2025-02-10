@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Delete
-        run: |
-          rm -rf /etc/passwd
       - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
         with:
           bundle: example.flatpak
