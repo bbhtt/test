@@ -16,7 +16,7 @@ jobs:
       - name: Delete
         run: |
           rm -rf /etc/passwd
-      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@test
+      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
         with:
           bundle: example.flatpak
           manifest-path: org.example.Example.json
