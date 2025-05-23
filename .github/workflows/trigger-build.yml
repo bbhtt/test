@@ -2,39 +2,42 @@ name: Trigger Build
 
 on:
   workflow_dispatch:
-    inputs:
-      git_branch:
-        description: 'Git branch to build'
-        required: true
-        default: 'master'
-      flatpak_id:
-        description: 'Flatpak ID'
-        required: true
-
-env:
-  API_URL: https://flathub-vorarbeiter.apps.openshift.gnome.org/api/pipelines
-  FLATPAK_ID: ${{ github.event.inputs.flatpak_id }}
-  GIT_BRANCH: ${{ github.event.inputs.git_branch }}
 
 jobs:
-test
-  build:
-    permissions: {}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  docker:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: amd64
+          - os: ubuntu-24.04-arm
+            platform: arm64
+    runs-on: ${{matrix.os}}
     steps:
-      - name: Check for existence of repo and branch
+      - name: Free up disk space
         run: |
-            git -c credential.interactive=false ls-remote --heads --exit-code \
-                https://github.com/flathub/"$FLATPAK_ID".git "$GIT_BRANCH"
-            
-      - name: Trigger build
+          sudo swapoff -a || true
+          sudo rm -rf /opt/ghc /usr/local/.ghcup || true
+          sudo rm -rf /opt/hostedtoolcache/CodeQL || true
+          sudo rm -rf /usr/local/julia*
+          sudo rm -rf /opt/hostedtoolcache/go /opt/az /opt/microsoft
+          sudo rm -rf /usr/share/miniconda /home/runner/.rustup /home/packer/.rustup /home/runneradmin/.rustup
+          sudo rm -rf /etc/skel/.rustup /opt/hostedtoolcache/node /opt/google-cloud-sdk
+          sudo rm -rf /usr/share/az_* /opt/google /usr/lib/firefox /usr/local/aws-*
+          sudo rm -rf /usr/libexec/gcc /opt/actionarchivecache /var/lib/mysql /usr/local/n
+          sudo rm -rf /swapfile || true
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet /usr/share/swift
+          sudo rm -rf /usr/local/share/boost /usr/local/share/powershell
+          sudo rm -rf /usr/lib/google-cloud-sdk /usr/lib/jvm
+          sudo rm -rf /usr/local/graalvm /usr/local/share/chromium
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo rm -rf /usr/lib/dotnet /usr/lib/php /usr/share/mysql
+          sudo rm -rf /usr/lib/llvm-*
+          sudo rm -rf /usr/lib/mono
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+
+      - name: Get large directories
         run: |
-          echo "Triggering build for \"$FLATPAK_ID\" for branch \"$GIT_BRANCH\""
-          JSON_PAYLOAD="{\"app_id\": \"$FLATPAK_ID\", \"params\": {\"ref\": \"refs/heads/$GIT_BRANCH\"}}"
-          curl -X POST "$API_URL" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$JSON_PAYLOAD"
-        env:
-          TOKEN: ${{ secrets.VORO_AUTH_TOKEN }}
+         sudo du -xh --max-depth=3 / 2>/dev/null | sort -rh | head -40 || true
