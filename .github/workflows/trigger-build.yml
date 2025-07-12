@@ -14,4 +14,4 @@ jobs:
 
       - name: Check format
         run: |
-          python3 -c "import requests; url = 'https://twintaillauncher.app/'; r = requests.get(url, allow_redirects=False); print(r.ok)"
+          python3 -c "import requests; url = 'https://twintaillauncher.app/'; r = requests.get(url, allow_redirects=False); print(r)"
