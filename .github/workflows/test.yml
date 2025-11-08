@@ -1,0 +1,63 @@
+name: Test
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+  workflow_dispatch:
+
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: x86_64
+          - os: ubuntu-24.04-arm
+            platform: aarch64
+    runs-on: ${{matrix.os}}
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Kernel version
+        run: |
+          uname -a
+
+      - name: Disable Apparmor
+        run: |
+          sudo aa-teardown >/dev/null 2>&1 || true
+          sudo systemctl disable --now apparmor.service >/dev/null 2>&1
+
+      - name: Enable unprivileged user namespaces
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_unconfined=0
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Install Docker
+        run: |
+          curl -fsSL -o docker.tgz https://download.docker.com/linux/static/stable/${{ matrix.platform }}/docker-28.5.2.tgz
+          tar xzf docker.tgz
+          sudo chmod +x docker/*
+          sudo mv -f docker/* /usr/bin/
+          rm -rf docker docker.tgz
+
+      - name: Docker version
+        run: |
+          docker --version
+
+      - name: Test
+        run: |
+          docker run --rm \
+            --entrypoint="" \
+            --security-opt seccomp=${GITHUB_WORKSPACE}/flatpak.seccomp.json \
+            -e TMPDIR=/work/tmp \
+            -v "${GITHUB_WORKSPACE}/work:/work" \
+            -w /work \
+            ghcr.io/flathub-infra/flatpak-builder-lint:unprivileged \
+            /bin/bash -c 'echo foobar'
