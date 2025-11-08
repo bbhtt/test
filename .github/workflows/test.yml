@@ -62,8 +62,10 @@ jobs:
           sudo aa-status
 
       - name: Test
+        id: test
         continue-on-error: true
         run: |
+          set +e
           docker run --rm \
             --entrypoint="" \
             --security-opt apparmor=unconfined \
@@ -73,7 +75,12 @@ jobs:
             -w /work \
             ghcr.io/flathub-infra/flatpak-builder-lint:unprivileged \
             /bin/bash -c 'echo foobar'
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
 
       - name: Dmesg
         run: |
           sudo dmesg
+
+      - name: Fail if test failed
+        if: steps.test.outputs.exit_code != '0'
+        run: exit ${{ steps.test.outputs.exit_code }}
