@@ -363,12 +363,6 @@
         "waitpid",
         "write",
         "writev",
-        "fsopen",
-        "fsconfig",
-        "fsmount",
-        "move_mount",
-        "open_tree",
-        "mount_setattr",
         "openat2"
       ],
       "action": "SCMP_ACT_ALLOW",
