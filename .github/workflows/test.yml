@@ -58,6 +58,8 @@ jobs:
           cat /proc/sys/kernel/apparmor_restrict_unprivileged_unconfined || true
           ls -ld /proc/self
           docker info
+          lsmod
+          sudo aa-status
 
       - name: Test
         continue-on-error: true
