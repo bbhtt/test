@@ -51,7 +51,16 @@ jobs:
         run: |
           docker --version
 
+      - name: Debug
+        run: |
+          cat /proc/sys/kernel/unprivileged_userns_clone || true
+          cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns || true
+          cat /proc/sys/kernel/apparmor_restrict_unprivileged_unconfined || true
+          ls -ld /proc/self
+          docker info
+
       - name: Test
+        continue-on-error: true
         run: |
           docker run --rm \
             --entrypoint="" \
@@ -61,3 +70,7 @@ jobs:
             -w /work \
             ghcr.io/flathub-infra/flatpak-builder-lint:unprivileged \
             /bin/bash -c 'echo foobar'
+
+      - name: Dmesg
+        run: |
+          sudo dmesg
